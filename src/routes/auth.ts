@@ -1,4 +1,4 @@
-import { Router, Request, Response } from 'express';
+import express, { Router, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { hashPassword, verifyPassword } from '../utils/password';
 import { signToken } from '../utils/jwt';
@@ -27,7 +27,7 @@ router.post('/random-user', async (_: Request, res: Response) => {
 });
 
 // 2. Login
-router.post('/login', async (req: Request, res: Response) => {
+router.post('/login', async (req: Request, res: Response): Promise<any> => {
   const { username, password } = req.body;
   const user = await prisma.user.findFirst({ where: { username } });
   if (!user) return res.status(401).json({ error: 'Invalid credentials' });
@@ -40,7 +40,7 @@ router.post('/login', async (req: Request, res: Response) => {
 });
 
 // 3. Forgot-password
-router.post('/forgot-password', async (req, res) => {
+router.post('/forgot-password', async (req, res): Promise<any> => {
   const { email } = req.body;
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) return res.status(200).json({ message: 'If account exists, email sent' }); // don’t leak
@@ -58,7 +58,7 @@ router.post('/forgot-password', async (req, res) => {
 });
 
 // 4. Reset-password
-router.post('/reset-password', async (req, res) => {
+router.post('/reset-password', async (req, res): Promise<any> => {
   const { token, newPassword } = req.body;
   const record = await prisma.passwordReset.findUnique({ where: { token } });
   if (!record || record.used || record.expiresAt < new Date())
