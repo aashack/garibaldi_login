@@ -1,0 +1,39 @@
+version: "3.9"
+services:
+  auth-db:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: auth
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    restart: always
+    ports:
+      - "6379:6379"
+
+  garibaldi_login:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: "postgresql://postgres:postgres@auth-db:5432/auth?schema=public"
+      REDIS_URL: "redis://redis:6379"
+      JWT_SECRET: "superSecretChangeMe"
+      SMTP_HOST: "sandbox.smtp.mailtrap.io"
+      SMTP_PORT: "2525"
+      SMTP_USER: "key"
+      SMTP_PASS: "secret"
+    depends_on:
+      - auth-db
+      - redis
+    ports:
+      - "3000:3000"
+volumes:
+  pgdata:
