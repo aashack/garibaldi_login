@@ -2,8 +2,7 @@ import jwt from 'jsonwebtoken';
 import { v4 as uuid } from 'uuid';
 
 const SECRET = process.env.JWT_SECRET!;
-const EXPIRES_IN = '15m';          // tweak as needed
-
+const EXPIRES_IN = '15m';          // Token expiration time
 interface Payload {
   sub: string;           // userId
   username: string;
