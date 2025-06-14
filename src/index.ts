@@ -10,6 +10,10 @@ app.use(express.json());
 
 app.use('/api/auth', authRoutes);
 
-app.get('/', (_, res): Promise<any> => res.send('Auth service alive 🚀'));
+app.get('/', (_: express.Request, res: express.Response) => {
+  res.send('Auth service alive 🚀');
+});
+
+
 const PORT = 3000;
 app.listen(PORT, () => console.log(`Auth service listening on ${PORT}`));
