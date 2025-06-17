@@ -10,10 +10,12 @@ export const transporter = nodemailer.createTransport({
   },
 });
 
-export const sendPasswordReset = async (email: string, link: string) =>
-  transporter.sendMail({
-    from: '"Auth Service" <no-reply@garibaldi.io>',
-    to: email,
-    subject: 'Reset your password',
-    html: `<p>Click <a href="${link}">here</a> to reset your password. Expires in 15 min.</p>`,
-  });
+export const sendPasswordReset = async (email: string, link: string) => {
+    console.log(transporter)
+    transporter.sendMail({
+      from: '"Auth Service" <no-reply@garibaldi.io>',
+      to: email,
+      subject: 'Reset your password',
+      html: `<p>Click <a href="${link}">here</a> to reset your password. Expires in 15 min.</p>`,
+    });
+}

@@ -52,7 +52,11 @@ router.post('/forgot-password', async (req, res): Promise<any> => {
   });
 
   const link = `http://localhost:3000/reset-password?token=${token}`;
-  await sendPasswordReset(email, link);
+  try {
+    await sendPasswordReset(email, link);
+  } catch (error) {
+    console.error(error);
+  }
 
   res.json({ message: 'Email sent' });
 });
