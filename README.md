@@ -14,7 +14,7 @@ A secure authentication service built with Express.js, TypeScript, and Prisma. F
 ## Quick Start
 
 1. Clone the repository
-2. Set up your environment variables in `docker-compose.yml`
+2. Set up your environment variables in `.env`
 3. Start the services:
 ```bash
 docker-compose up -d
