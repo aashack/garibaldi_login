@@ -1,6 +1,15 @@
 FROM node:20-alpine
 WORKDIR /app
+
+# Copy package files and install dependencies
 COPY package*.json ./
-RUN npm i
+RUN npm install
+
+# Copy source code
 COPY . .
-CMD ["npm","run","dev"]
+
+# Build TypeScript code
+RUN npm run build
+
+# Start the application
+CMD ["npm", "run", "start"]
