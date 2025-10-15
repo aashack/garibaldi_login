@@ -9,6 +9,32 @@ import { transporter, sendPasswordReset } from '../utils/services/mailerService'
 const prisma = new PrismaClient();
 const router = Router();
 
+// 0. Register
+router.post('/register', async (req: Request, res: Response): Promise<any> => {
+  const { username, email, password, confirmPassword } = req.body || {};
+  if (!username || !email || !password || !confirmPassword) {
+    return res.status(400).json({ error: 'All fields are required' });
+  }
+  if (password !== confirmPassword) {
+    return res.status(400).json({ error: 'Passwords do not match' });
+  }
+  const uname = String(username).toLowerCase();
+  const mail = String(email).toLowerCase();
+  const existing = await prisma.user.findFirst({ where: { OR: [{ username: uname }, { email: mail }] } });
+  if (existing) {
+    return res.status(409).json({ error: 'Username or email already in use' });
+  }
+  const created = await prisma.user.create({
+    data: {
+      username: uname,
+      email: mail,
+      passwordHash: await hashPassword(password),
+    },
+  });
+  const token = signToken(created.id, created.username);
+  return res.status(201).json({ token });
+});
+
 // 1. Random user (seed / testing)
 router.post('/random-user', async (_: Request, res: Response) => {
   const user = {
