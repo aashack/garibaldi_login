@@ -34,6 +34,7 @@ docker-compose exec garibaldi_login npx prisma generate
 
 ### Authentication Endpoints
 
+- `POST /api/auth/register` - Register a new user (fields: `username`, `email`, `password`, `confirmPassword`). Returns JWT on success and triggers profile initialization in the portal backend.
 - `POST /api/auth/random-user` - Create a test user with random credentials
 - `POST /api/auth/login` - Authenticate user and return JWT token
 - `POST /api/auth/forgot-password` - Send password reset email
@@ -79,6 +80,7 @@ Required environment variables (configured in docker-compose.yml):
 - `DATABASE_URL` - PostgreSQL connection string
 - `REDIS_URL` - Redis connection string
 - `JWT_SECRET` - Secret key for JWT signing
+- `PORTAL_BASE_URL` - Base URL for portal backend (used to initialize profiles after registration). For Docker Desktop on Windows/Mac using separate compose files, set to `http://host.docker.internal:3001`. If both services run in the same Docker Compose project/network, set to `http://garibaldi_portal_backend:3001`.
 - `SMTP_HOST` - SMTP server host
 - `SMTP_PORT` - SMTP server port
 - `SMTP_USER` - SMTP username

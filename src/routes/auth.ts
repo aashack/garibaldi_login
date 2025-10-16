@@ -32,6 +32,23 @@ router.post('/register', async (req: Request, res: Response): Promise<any> => {
     },
   });
   const token = signToken(created.id, created.username);
+  // Service-to-service call: initialize profile in portal backend (idempotent)
+  const base = process.env.PORTAL_BASE_URL;
+  if (base) {
+    try {
+      const url = `${base.replace(/\/$/, '')}/api/profile/initialize`;
+      const fetchFn: any = (globalThis as any).fetch;
+      if (typeof fetchFn === 'function') {
+        await fetchFn(url, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      }
+    } catch (err) {
+      console.error('Failed to initialize portal profile:', err);
+      // Non-fatal: proceed to return token regardless
+    }
+  }
   return res.status(201).json({ token });
 });
 
