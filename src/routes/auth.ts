@@ -9,8 +9,29 @@ import { transporter, sendPasswordReset } from '../utils/services/mailerService'
 const prisma = new PrismaClient();
 const router = Router();
 
+// ============================================================
+// REGISTRATION CONTROL
+// ============================================================
+// Set to true to enable public registration, false to block it.
+// When registration is closed, users will receive an error message.
+// To enable registration:
+//   1. Change REGISTRATION_ENABLED to true
+//   2. In the frontend (garibaldi_portal), edit:
+//      src/components/auth/LoginForm.vue
+//      - Uncomment the Register button
+//      - Remove or comment out the "registration closed" warning div
+// ============================================================
+const REGISTRATION_ENABLED = false;
+
 // 0. Register
 router.post('/register', async (req: Request, res: Response): Promise<any> => {
+  // Check if registration is enabled
+  if (!REGISTRATION_ENABLED) {
+    return res.status(403).json({ 
+      error: 'Registration is currently closed. Please contact an administrator.' 
+    });
+  }
+
   const { username, email, password, confirmPassword } = req.body || {};
   if (!username || !email || !password || !confirmPassword) {
     return res.status(400).json({ error: 'All fields are required' });
@@ -18,11 +39,12 @@ router.post('/register', async (req: Request, res: Response): Promise<any> => {
   if (password !== confirmPassword) {
     return res.status(400).json({ error: 'Passwords do not match' });
   }
+  // For email-only registration, username is the email
   const uname = String(username).toLowerCase();
   const mail = String(email).toLowerCase();
   const existing = await prisma.user.findFirst({ where: { OR: [{ username: uname }, { email: mail }] } });
   if (existing) {
-    return res.status(409).json({ error: 'Username or email already in use' });
+    return res.status(409).json({ error: 'Email already in use' });
   }
   const created = await prisma.user.create({
     data: {
@@ -31,7 +53,7 @@ router.post('/register', async (req: Request, res: Response): Promise<any> => {
       passwordHash: await hashPassword(password),
     },
   });
-  const token = signToken(created.id, created.username);
+  const token = signToken(created.id, created.email);
   // Service-to-service call: initialize profile in portal backend (idempotent)
   const base = process.env.PORTAL_BASE_URL;
   if (base) {
@@ -69,16 +91,23 @@ router.post('/random-user', async (_: Request, res: Response) => {
   res.json({ ...user, id: created.id });
 });
 
-// 2. Login
+// 2. Login (using email)
 router.post('/login', async (req: Request, res: Response): Promise<any> => {
-  const { username, password } = req.body;
-  const user = await prisma.user.findFirst({ where: { username } });
+  const { email, password } = req.body;
+  
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password are required' });
+  }
+  
+  // Find user by email (case-insensitive)
+  const mail = String(email).toLowerCase();
+  const user = await prisma.user.findFirst({ where: { email: mail } });
   if (!user) return res.status(401).json({ error: 'Invalid credentials' });
 
   const ok = await verifyPassword(password, user.passwordHash);
   if (!ok) return res.status(401).json({ error: 'Invalid credentials' });
 
-  const token = signToken(user.id, user.username);
+  const token = signToken(user.id, user.email);
   res.json({ token });
 });
 

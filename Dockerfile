@@ -16,5 +16,6 @@ RUN npm run build
 # Default port (can be overridden via environment variable)
 ENV PORT=3000
 
-# Run migrations and start the application
-CMD /bin/sh -c "npx prisma migrate deploy && npm run start"
+# Run migrations, seed database with default users, then start the application
+# The seed script is idempotent - it won't duplicate existing users
+CMD /bin/sh -c "npx prisma migrate deploy && npx ts-node prisma/seed.ts && npm run start"
