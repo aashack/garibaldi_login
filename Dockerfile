@@ -13,5 +13,8 @@ COPY . .
 RUN npx prisma generate
 RUN npm run build
 
-# Start the application
-CMD ["npm", "run", "start"]
+# Default port (can be overridden via environment variable)
+ENV PORT=3000
+
+# Run migrations and start the application
+CMD /bin/sh -c "npx prisma migrate deploy && npm run start"
