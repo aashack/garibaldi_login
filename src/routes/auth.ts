@@ -123,7 +123,7 @@ router.post('/forgot-password', async (req, res): Promise<any> => {
     data: { token, userId: user.id, expiresAt },
   });
 
-  const link = `http://localhost:3000/reset-password?token=${token}`;
+  const link = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${token}`;
   try {
     await sendPasswordReset(email, link);
   } catch (error) {

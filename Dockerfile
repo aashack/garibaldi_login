@@ -1,10 +1,14 @@
-FROM node:20-alpine
+# Build stage
+FROM node:20-alpine AS builder
 WORKDIR /app
 
-# Copy package files and install dependencies
+# Copy package files
 COPY package*.json ./
+COPY tsconfig.json ./
 COPY prisma ./prisma/
-RUN npm install
+
+# Install all dependencies (needed for TypeScript compilation)
+RUN npm ci
 
 # Copy source code
 COPY . .
@@ -13,9 +17,27 @@ COPY . .
 RUN npx prisma generate
 RUN npm run build
 
-# Default port (can be overridden via environment variable)
+# Production stage
+FROM node:20-alpine
+WORKDIR /app
+
+# Set production environment
+ENV NODE_ENV=production
 ENV PORT=3000
 
-# Run migrations, seed database with default users, then start the application
-# The seed script is idempotent - it won't duplicate existing users
-CMD /bin/sh -c "npx prisma migrate deploy && npx ts-node prisma/seed.ts && npm run start"
+# Copy package files
+COPY package*.json ./
+COPY prisma ./prisma/
+
+# Install only production dependencies
+RUN npm ci --only=production && npm cache clean --force
+
+# Copy built application and migrations from builder
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+
+# Expose port
+EXPOSE 3000
+
+# Run migrations and start the application
+CMD /bin/sh -c "npx prisma migrate deploy && node dist/prisma/seed.js && npm run start"
